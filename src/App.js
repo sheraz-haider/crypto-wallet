@@ -4,16 +4,13 @@ import { networks, keyStoreKey } from './app.config';
 
 const web3 = new Web3();
 
-function Header() {
-  const [currentNetwork, setCurrentNetwork] = useState(networks[0]);
-
+function Header({ currentNetwork, setCurrentNetwork }) {
   useEffect(() => {
     web3.setProvider(currentNetwork.rpc);
-  }, []);
+  }, [currentNetwork]);
 
   const selectNetwork = async (e, network) => {
     e.preventDefault();
-    web3.setProvider(network.rpc);
     setCurrentNetwork(network);
   };
 
@@ -218,7 +215,7 @@ function AccountDetailsScreen({ account, setCurrentAccount }) {
   );
 }
 
-function LoggedInScreen({ wallet }) {
+function LoggedInScreen({ wallet, currentNetwork }) {
   const [accounts, setAccounts] = useState([]);
   const [currentAccount, setCurrentAccount] = useState(null);
 
@@ -226,7 +223,7 @@ function LoggedInScreen({ wallet }) {
     (async () => {
       setAccounts(await getAccounts());
     })();
-  }, []);
+  }, [currentNetwork]);
 
   async function getAccounts() {
     const accountsList = [];
@@ -238,7 +235,8 @@ function LoggedInScreen({ wallet }) {
           const weiBalance = parseInt(
             await web3.eth.getBalance(element.address)
           );
-          element.balance = weiBalance > 0 ? web3.utils.fromWei(weiBalance.toString()) : 0;
+          element.balance =
+            weiBalance > 0 ? web3.utils.fromWei(weiBalance.toString()) : 0;
           accountsList.push(element);
         }
       }
@@ -304,12 +302,16 @@ function App() {
   const [password, setPassword] = useState('');
   const [wallet, setWallet] = useState();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [currentNetwork, setCurrentNetwork] = useState(networks[0]);
 
   const foundWallet = !!localStorage.getItem(keyStoreKey);
 
   return (
     <div className='App'>
-      <Header />
+      <Header
+        currentNetwork={currentNetwork}
+        setCurrentNetwork={setCurrentNetwork}
+      />
       {!isLoggedIn ? (
         <>
           {!uiState.showPassword ? (
@@ -325,7 +327,7 @@ function App() {
           )}
         </>
       ) : (
-        <LoggedInScreen wallet={wallet} />
+        <LoggedInScreen wallet={wallet} currentNetwork={currentNetwork} />
       )}
     </div>
   );
